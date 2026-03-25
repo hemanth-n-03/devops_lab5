@@ -1,47 +1,34 @@
 pipeline {
     agent any
-
     environment {
-        // Replace with your Docker Hub username and repo name
-        DOCKER_IMAGE = "your-username/my-app"
-        REGISTRY_CREDS = 'docker-hub-creds'
+        // Change 'your-docker-id' to your actual Docker Hub username
+        DOCKER_HUB_USER = 'your-docker-id'
+        APP_NAME = 'my-java-app'
+        REGISTRY_CREDS = 'docker-hub-creds' // The ID you set in Jenkins Credentials
     }
-
     stages {
         stage('Checkout') {
             steps {
-                // Pulls code from your Git repository
                 checkout scm
             }
         }
-
-        stage('Build Docker Image') {
+        stage('Build Image') {
             steps {
                 script {
-                    // Builds the image using the Dockerfile in your root directory
-                    // Tags it with the Jenkins build number for versioning
-                    dockerApp = docker.build("${DOCKER_IMAGE}:${env.BUILD_NUMBER}")
+                    // Builds using the Dockerfile you just created
+                    dockerImage = docker.build("${DOCKER_HUB_USER}/${APP_NAME}:${env.BUILD_NUMBER}")
                 }
             }
         }
-
-        stage('Push to Registry') {
+        stage('Push Image') {
             steps {
                 script {
-                    // Uses the credentials we stored in Step 1
                     docker.withRegistry('', REGISTRY_CREDS) {
-                        dockerApp.push()
-                        dockerApp.push("latest") // Also tag as latest
+                        dockerImage.push()
+                        dockerImage.push("latest")
                     }
                 }
             }
-        }
-    }
-
-    post {
-        always {
-            // Clean up the local image to save disk space on the Jenkins agent
-            sh "docker rmi ${DOCKER_IMAGE}:${env.BUILD_NUMBER} || true"
         }
     }
 }
