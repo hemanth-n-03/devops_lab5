@@ -40,7 +40,7 @@ pipeline {
 
         stage('Push Docker Image') {
             steps {
-                bat 'docker push new_docker_image:latest'
+                bat 'docker push %IMAGE_NAME%:latest'
             }
         }
     }
